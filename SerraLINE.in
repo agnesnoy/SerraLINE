@@ -1,0 +1,43 @@
+c Input file for SerraLINE
+c Lines beginning with "c" are comment lines.
+c Always live one line before entering a parameter.
+c------------------------------------------------------------------------------
+c Indicate if the structure to be analysed is a circle (closed) or linear (open)
+c Write 0 for opened structure and 1 for closed
+c
+
+   1
+c
+c Even if Wrline only analyses double-stranded structures, please specify
+c if the DNA to be analysed has a topology that takes into account both
+c strands (double-stranded), only one strand (single-stranded) or if 
+c you don't have a topology which will result in the same results but without
+c sequence.
+c Type 1 for single stranded, 2 for double stranded DNA or 0 if topology
+c is not being provided (if 0 then the topology input will be ignored).
+c
+
+   0
+c
+c -------------------------------------------
+c If last entry was 0, then indicate the number of bases.                                      
+c If last entry was different than 0, this input will be ignored 
+c (but do not erase the whole line).                                          
+c
+
+  336
+c
+c -------------------------------------------
+c Topology file (it will be ignored if second input is 0).                                        
+c                                          
+
+   test.prmtop
+c
+c -------------------------------------------
+c Trajectory file                                         
+c                                          
+
+   C1.xyz
+c
+c No more inputs to read
+c end

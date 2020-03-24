@@ -1,0 +1,11 @@
+c Input file for extract.f90
+c-------------------------------------------------
+c SerraLINE parameters file (serraline.out)
+
+    SerraLINE.out
+c------------------------------------------------
+c Length of interest (bp steps)
+
+   1
+c
+c End

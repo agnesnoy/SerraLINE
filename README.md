@@ -68,6 +68,15 @@ SerraLINE is composed of two main programs:
              and sorts out the positions according to the 
              hinge point.
            
+Additionally to the standard method, SerraLINE can project the 
+input structure to the plane that best fits the molecule or a 
+given region specified by the user.
+This projection method mimics experiments where structures are 
+visualized on a two dimensional plane, and quantities such as width, 
+height and aspect ratio (width/height) can be calculated.
+
+For both methods, bending angles are calculated with the
+same criteria.
 
 An example is provided for running SerraLINE and processing 
 results.
@@ -105,7 +114,7 @@ to the data files as well as the type of structure in the next
 input file:
 
   - SerraLINE.in .
-    Five inputs need to be indicated in this file. 
+    Seven inputs need to be indicated in this file. 
     1.- The user first needs to specify the type of structure, 
         typing 0 for opened structure (linear DNA) and 1 for
         closed structure (circular DNA).
@@ -119,12 +128,20 @@ input file:
         the number of frames in the simulation. If you didn't
         type 0 in the previous input, then SerraLINE will ignore
         this input.
-    4.- Path to the topology file. This input will be ignored if
+    4.- Method selection. Type 1 if you want to perform the
+        standard method. For the projection method, by typing
+        0 the whole structure will be projected to the plane 
+        that best fits, or, specifying with ' ', you can 
+        fit a plane to a selection of base-pairs. This 
+        selection of points should be at least 3 bps.
+    5.- Path to the topology file. This input will be ignored if
         you indicated that you don't have a topology.
-    5.- Path to the trajectory file. This trajectory can be in
+    6.- Path to the trajectory file. This trajectory can be in
         amber format (*crd or *x) and WrLINE outputs format
         ( *3col and *xyz).
-
+    7.- In case the projection method was selected, the projected
+        trajectory can be written in xyz or crd format. Type 1
+        for writing the projected trajectory or 0 for not.
 
 Another input file is required for executing the Extract process:
 
@@ -155,7 +172,7 @@ SerraLINE's output file (SerraLINE.out)
 Then type: ./Extract < extract.in
 
 This will filter out parameters at yout length of interest and will
-also sort the data (it will ready to plot!).
+also sort the data (it will be ready to plot!).
 
 ___________________________________________________________________
 
@@ -171,6 +188,9 @@ The main process produces the next output:
   - SerraLINE.out.
     Contains information of the structure analysed and average and 
     standard deviations of bending angles at different lengths.
+    If the projection method was used, average and standard 
+    deviation of width, height and aspect ratio will be given at
+    the top.
 
 And the extraction process (Extract) produces the following output:
 
@@ -195,9 +215,10 @@ WrLINE's example:
 
  -test.prmtop is the topology file.
 
-In SerraLINE.in, it alreay specifies the type of structure (circular),
+In SerraLINE.in, it already specifies the type of structure (circular),
 no topology is being provided, the number of base-pairs and the
-path to the trajectory file.
+path to the trajectory file. This file performs the standard method 
+(without projection).
 
 The next process will compile everything and run the main process
 

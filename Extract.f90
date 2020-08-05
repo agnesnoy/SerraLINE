@@ -1,5 +1,23 @@
-!                                                              22/07/2019
+!                                                              04/07/2020
 ! This program extracts information from serraline.out for a particular length,
+!
+!    -----------------------------------------------------------------------
+!    Written by Victor Velasco
+!
+!    SerraLINE is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    SerraLINE is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+!    -----------------------------------------------------------------------
+
   program Extract
   
   use IO_mod
@@ -8,10 +26,11 @@
   implicit none
 
   integer :: i, j, N, nbp, my_bp, ierror
-  character(360) :: in_file, out_file, F_FORM !Format
+  character(1200) :: in_file, out_file, F_FORM !Format
   real(dp), allocatable :: parms(:,:), mid(:), & !Point in the middle of two bp
                          & aux_r1(:)
-  real(dp) :: aux_r2
+  real(dp) :: aux_r2                             
+  logical :: planefit
 
  !INPUTS SECTION
  !-----------------------------------------------
@@ -22,8 +41,10 @@
  !READING SECTION
  !-----------------------------------------------
  !Read serraline.out
- !The next subroutine figures out if is closed structure
- call read_parms( in_file, my_bp, N, nbp, parms, F_FORM )
+ !The next subroutine figures out if is closed structure and if a plane was fitted
+ call read_parms( in_file, my_bp, N, nbp, parms, planefit, F_FORM )
+
+ !we didn't use planefit, but could be useful in the future (or not?)
 
  !WRITING SECTION
  !-----------------------------------------------
@@ -81,7 +102,7 @@
     end do
   end do
 
-  !Now do the real writing
+  !Now write!
   do i=1,N
     write(11,trim(F_FORM)) mid(i), parms(i,:)
   end do
@@ -90,7 +111,7 @@
  !CLEAR DATA
  !-----------------------------------------------
  
-  deallocate(parms, aux_r1, mid, stat=ierror)
+  deallocate(parms, stat=ierror)
   if (ierror/=0) stop "Error in deallocating parms"
   
  !FORMATS

@@ -1,6 +1,24 @@
-!------------------------------------------------------------- 22/07/2019
+!------------------------------------------------------------- 04/07/2020
 ! This module contains functions and subroutines needed for reading
 ! and writing.
+!
+!    -----------------------------------------------------------------------
+!    Written by Victor Velasco
+!
+!    SerraLINE is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    SerraLINE is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+!    -----------------------------------------------------------------------
+
   module IO_mod
 
   use parms
@@ -264,7 +282,7 @@
      box = 0
      write(6,*) "Assuming there is no box in amber trajectory file"
    end if
- 
+
    !get dimensions of trajectory file
    call arrdims(traj,nlin,ncol)
 
@@ -459,6 +477,170 @@
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
+ !This subroutine writes coordinates from last snapshot. Both
+ !Projected and centred (not projected but centred at the origin, where
+ !the centroid of the fitted atoms is zero
+
+ !F_AMB_T is amber trajectory format. Variable is stored in parms.f90
+ subroutine write_crds( centred, projected, N )
+
+ implicit none
+ integer, intent(in) :: N
+ real(dp), intent(in) :: centred(3,N), projected(3,N)
+ character(360) :: c_crd, p_crd
+ integer :: ierror
+
+ c_crd = "centred.crd"
+ p_crd = "projected.crd"
+
+ !Let's write centred coordinates
+ open(unit=10, file=trim(c_crd), status="replace", action="write", iostat=ierror)
+ if (ierror /= 0) stop "Error in openning centred.crd"
+ 
+ !Header
+ write(10,*) "Created by SerraLINE"
+
+ !This is risky, but let's do it simple
+ write(10,trim(F_AMB_T)) centred(:,:)
+
+ close(10, iostat=ierror)
+ if (ierror /= 0) stop "Error in closing centred.crd"
+
+ !Let's write projected
+ open(unit=11, file=trim(p_crd), status="replace", action="write", iostat=ierror)
+ if (ierror /= 0) stop "Error in openning projected.crd"
+
+ !Header
+ write(11,*) "Created by SerraLINE"
+
+ !Again, a bit risky
+ write(11,trim(F_AMB_T)) projected(:,:)
+
+ close(11, iostat=ierror)
+ if (ierror /= 0) stop "Error in closing projected.crd"
+
+ end subroutine write_crds
+!----------------------------------------------------------------------- 
+
+
+!-----------------------------------------------------------------------
+ !This subroutine is  writes the output file with the bending angles, 
+ !widths and heights, This is for opened structures
+ subroutine write_av_parms(nbp,ndim,mdim,frames,seq,avstd_bends, &
+          & avstd_width, avstd_height, avstd_aratio)
+ implicit none
+
+ integer, intent(in) :: nbp, ndim, mdim, frames
+ character(1), intent(in) :: seq(nbp)
+ real(dp), intent(in) :: avstd_bends(2,mdim), avstd_width(2), &
+                       & avstd_height(2), avstd_aratio(2)
+
+ character(360) :: output_file
+ integer :: i, j, l, ierror
+
+ output_file = "SerraLINE.out"
+
+ open(unit=10, file=trim(output_file), status="replace", action="write", iostat=ierror)
+ if (ierror/=0) stop 'Error in opening output bending file'
+
+  write(10,*) "PARAMETERS"
+  write(10,*) ""
+  write(10,*) "OPENED STRUCTURE"
+  write(10,*) "METHOD: PROJECTION"
+  write(10,*) "BASE PAIRS ", ndim
+  write(10,*) "SEQUENCE"
+  write(10,*) "", seq(1:nbp)
+  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
+  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
+  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,*) ""
+  write(10,*) "First column averages, second column standard deviations"
+  l=0
+  do j=1,ndim-1
+    !write(10,trim(F_PARM_3)) j+1, "mer"
+    write(10,trim(F_PARM_3)) j, "bp step"
+    write(10,trim(F_PARM_1)) "base-step", "Bending angle"
+    write(10,*) "--------------------------------------"
+
+    do i=1,ndim-j
+      l=l+1
+      write(10,trim(F_PARM_2)) i, "-", i+j, " "," ",seq(i),seq(i+j), " "," ", &
+               & avstd_bends(1,l), avstd_bends(2,l)
+    end do
+    write(10,*) ""
+  end do
+
+ close(10) 
+
+ end subroutine write_av_parms
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+ !This subroutine is similar to write_av_parms subroutine but this one is for
+ ! closed structures, which means that per every length l, there are 
+ ! nbp parameters. (There are n lengths also)
+ subroutine write_c_av_parms(nbp,frames,seq,avstd_bends,avstd_width,avstd_height,avstd_aratio)
+ implicit none
+
+ integer, intent(in) :: nbp, frames
+ character(1), intent(in) :: seq(nbp)
+ real(dp), intent(in) :: avstd_bends(2,nbp,nbp-1), avstd_width(2), & 
+                       & avstd_height(2), avstd_aratio(2)
+
+ character(1) :: c_seq(2*nbp)
+ character(360) :: output_file
+ integer :: i, l, s, ierror
+
+ output_file = "SerraLINE.out"
+ 
+ c_seq(1:nbp) = seq(1:nbp)
+
+ c_seq(nbp+1:2*nbp) = seq(1:nbp)
+
+ open(unit=10, file=trim(output_file), status="replace", action="write", iostat=ierror)
+ if (ierror/=0) stop 'Error in opening output bending file'
+
+  write(10,*) "PARAMETERS"
+  write(10,*) ""
+  write(10,*) "CLOSED STRUCTURE"
+  write(10,*) "METHOD: PROJECTION"
+  write(10,*) "BASE PAIRS ", nbp
+  write(10,*) "SEQUENCE"
+  write(10,*) "", seq(1:nbp)
+  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
+  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
+  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,*) ""
+  write(10,*) "First column averages, second column standard deviations"
+  do l=1,nbp-1
+    !write(10,trim(F_PARM_3)) l+1, "mer"
+    write(10,trim(F_PARM_3)) l, "bp step"
+    write(10,trim(F_PARM_1)) "base-step", "Bending angle"
+    write(10,*) "--------------------------------------"
+
+    do i=1,nbp
+
+      s = i + l
+      if (s > nbp) then
+        s = s - nbp
+      end if
+
+      write(10,trim(F_PARM_2)) i, "-", s, " "," ",c_seq(i),c_seq(s), " "," ", &
+               & avstd_bends(1,i,l), avstd_bends(2,i,l)
+    end do
+    write(10,*) ""
+  end do
+
+ close(10) 
+
+ end subroutine write_c_av_parms
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
  ! This subroutine  writes the output file with the bending angles
  ! and is for opened structures
  subroutine write_av_bends(nbp,ndim,mdim,frames,seq,avstd_bends)
@@ -479,7 +661,7 @@
   write(10,*) "PARAMETERS"
   write(10,*) ""
   write(10,*) "OPENED STRUCTURE"
-!  write(10,*) "METHOD: WITHOUT PROJECTION"
+  write(10,*) "METHOD: WITHOUT PROJECTION"
   write(10,*) "BASE PAIRS ", ndim
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
@@ -488,6 +670,7 @@
   write(10,*) "First column averages, second column standard deviations"
   l=0
   do j=1,ndim-1
+    !write(10,trim(F_AVB_3)) j+1, "mer"
     write(10,trim(F_AVB_3)) j, "bp step"
     write(10,trim(F_AVB_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
@@ -533,7 +716,7 @@
   write(10,*) "PARAMETERS"
   write(10,*) ""
   write(10,*) "CLOSED STRUCTURE"
-!  write(10,*) "METHOD: WITHOUT PROJECTION"
+  write(10,*) "METHOD: WITHOUT PROJECTION"
   write(10,*) "BASE PAIRS ", nbp
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
@@ -541,6 +724,7 @@
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
   do l=1,nbp-1
+    !write(10,trim(F_AVB_3)) l+1, "mer"
     write(10,trim(F_AVB_3)) l, "bp step"
     write(10,trim(F_AVB_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
@@ -598,30 +782,40 @@
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-  ! Subroutine used by SerraLINE.
+  !Subroutine used by SerraLINE.
   ! Reads directory of trajectory (traj) and topology (top) files.
   ! Also, it returns a logical variable circle_str which indicates
   ! If the structure being analysed is a closed structure.
   ! and if the topology contains single or double stranded DNA, even
   ! if the WrLINE only analysis double-stranded DNA.
+  ! bp_fitting indicates which bp to fit the plane
+  ! print_print indicates if we are going to print the projected trajectory
+  ! xyz indicates if in xyz format or crd (if falsE)
   ! All this information is indicated in the input file "s_line.in
-  subroutine SerraLINE_inputs(traj,top,circle_str,str,nbp)
+  ! If topology is not provided, SerraLINE can still run but without
+  ! Detail in the sequence
+
+  subroutine SerraLINE_inputs(traj,top,circle_str,str,nbp,bp_fitting,fitplane, &
+                            & print_proj,xyz)
   implicit none
 
   !top, traj : directories
   !circle_str : true if is closed structure
-  character(360), intent(out) :: top, traj
-  logical, intent(out) :: circle_str
+  !fitplane : if true, then a plane will be fitted
+  character(1200), intent(out) :: top, traj
+  logical, intent(out) :: circle_str, fitplane, print_proj, xyz
   integer, intent(out) :: str, nbp
-  character(360) :: aux
-  integer :: stra,ierror
+  logical :: not_good
+  integer, allocatable :: bp_fitting(:)
+  character(1200) :: strinng, aux
+  integer :: stra, i, auxi, ierror
 
   !Closed structure?
   call nextpar
   read(5,*,iostat=ierror) stra
   if (ierror/=0) stop "Invalid input. Tell me if the fragment is closed or opened"
-  if ( (stra < 0) .or. (stra > 1) ) stop "Please type 0 for opened and 1 for closed"
- 
+  if ( (stra /= 0) .and. (stra /= 1) ) stop "Please type 0 for opened or 1 for closed structure"
+
   !Single or double-stranded topology?
   call nextpar
   read(5,*,iostat=ierror) str
@@ -632,25 +826,102 @@
   !Number of base-pairs
   call nextpar
   read(5,*) aux
-  if (str == 0) then 
+  if (str == 0) then
     read(aux,*,iostat=ierror) nbp
     if (ierror /= 0) stop "Please type a valid input for number of base-pairs"
     if (nbp <= 0) stop "Number of base-pairs should be greater than 0"
   end if
 
+  !Mask
+  call nextpar
+  read(5,"(A)",iostat=ierror) strinng
+  if (ierror /=0) stop "Error in reading fitting options"
+
+  not_good = .true.
+  fitplane = .true.
+  do i=1,len(strinng)
+    if ( strinng(i:i) == "'"  ) then
+      call read_fitting_bps(strinng, bp_fitting)   !If yes, read string (will be complicated)
+      not_good = .false.
+      exit
+    else if (strinng(i:i) .eq. "0" ) then          !If not
+      not_good = .false.
+      exit
+    else if (strinng(i:i) .eq. "1" ) then          !If not
+      not_good = .false.
+      fitplane = .false.                           !Fitting will not be performed
+      exit
+    end if
+  end do
+
+  if (not_good) stop "Could not determined bps for fitting"
+ 
   !Topology
   call nextpar
-  read(5,"(A)") top
+  read(5,"(A)",iostat=ierror) top
+  if (ierror /=0) stop "Error in reading topology input"
   top = adjustl(top)
  
   !Trajectory
   call nextpar
   read(5,"(A)",iostat=ierror) traj
-  if (ierror /= 0) stop "Please type a the path to the trajectory file"
+  if (ierror /=0) stop "Error in reading trajectory input"
   traj = adjustl(traj)
 
-  !Write info...
+  !Printing options
+  call nextpar
+  read(5,*,iostat=ierror) auxi, strinng
+  if (ierror /=0) stop "Error in reading printing trajectory options"
 
+  !Let's check printing options
+  if (fitplane) then           !If a fitting is performed
+
+     strinng = adjustl(strinng) !This will help
+
+     !If printing projection
+     if (auxi == 1) then
+
+        if ( trim(strinng) .eq. "xyz") then
+           print_proj = .true.
+           xyz = .true.
+        else if ( trim(strinng) .eq. "crd") then
+           print_proj = .true.
+           xyz = .false.
+        else
+           write(6,"(A)") "Warning, could not determine format printing option"
+           write(6,"(A)") "The projected trajectory will not be written"
+           print_proj = .false.
+           xyz = .false. !Whatever
+        end if
+
+     !If not printing
+     else if (auxi == 0) then
+
+        print_proj = .false.
+        xyz = .false. !Whatever, this logical will be ignored
+
+     !Any other value of auxi will do nothing
+     else
+
+        write(6,"(A)") "Warning, could not determine printing option"
+        write(6,"(A)") "The projected trajectory will not be written"
+        print_proj = .false.
+        xyz = .false. 
+
+     end if
+
+  !If we are not fitting we are not printing
+  else
+
+     print_proj = .false.
+     xyz = .false.
+
+  end if  
+
+  !Finally, just write the info...
+  !!--------------
+
+  !Closed or opened....
   if (stra == 1) then
     circle_str = .true.
     write(6,"(A)") "CLOSED STRUCTURE"
@@ -661,17 +932,43 @@
     stop "Tell me if its a closed or open structure (1 or 0)"
   end if           
 
+  !Single or double...
   if (str == 1) then
     write(6,"(A)") "SINGLE STRANDED TOPOLOGY"
   !No point of more if's since we already have the warning above
   else if (str == 2) then
     write(6,"(A)") "DOUBLE STRANDED TOPOLOGY"
-  else 
+  else
     write(6,"(A)") "TOPOLOGY NOT PROVIDED"
   end if
 
-  if (str /=0) write(6,"(2A)") "Topology file =", trim(top) 
+  !Fitting?
+  if (fitplane) then
+    if (allocated(bp_fitting)) then
+      write(6,"(A)") "Fitting will be applied considering specifc base-pairs"
+    else 
+      write(6,"(A)") "Fitting will be applied considering all base-pairs"
+    end if
+  else
+    write(6,"(A)") "No fitting will be performed, width and height will not be obtained"    
+  end if
+
+  !Topology and trajectory directories 
+  write(6,"(2A)") "Topology file =", trim(top) 
   write(6,"(2A)") "Trajectory file =", trim(traj) 
+
+  !Printing projection?
+  if (fitplane) then
+
+    if (print_proj) then
+      write(6,"(2A)") "Projected trajectory will be printed"
+    else
+      write(6,"(2A)") "Projected trajectory will not be printed"
+    end if
+
+  end if
+
+  !And it is done!
 
   end subroutine SerraLINE_inputs 
 !----------------------------------------------------------------------
@@ -683,7 +980,7 @@
   subroutine extract_inputs(in_file, my_bp )
   implicit none
 
-  character(360), intent(out) :: in_file
+  character(1200), intent(out) :: in_file
   integer, intent(out) :: my_bp 
 
   call nextpar
@@ -703,13 +1000,14 @@
 !-----------------------------------------------------------------------
   !Reads parameters in serraline.out and extracts them for a particular
   !length of interest (my_bp)
-  subroutine read_parms( in_file, my_bp, N, nbp, parms, F_FORM ) 
+  subroutine read_parms( in_file, my_bp, N, nbp, parms, planefit, F_FORM ) 
   implicit none
-  character(360), intent(in) :: in_file
-  character(360), intent(out) :: F_FORM
+  character(1200), intent(in) :: in_file
+  character(1200), intent(out) :: F_FORM
   integer, intent(in) :: my_bp
   integer, intent(out) :: N, nbp
   real(dp), allocatable, intent(out) :: parms(:,:)
+  logical, intent(out) :: planefit
   integer ::  i, j, l, n_parms, bp, ierror
   logical :: c_str
   character(360) :: aux
@@ -733,11 +1031,25 @@
   else
     c_str = .false.
   end if
+  !AND METHOD
+  read(10,"(A)") aux
+  if (aux(10:19) .eq. "PROJECTION") then
+    planefit = .true.
+  else
+    planefit = .false.
+  end if
   read(10,*) aux, aux, nbp !N bp
   read(10,"(A)") aux !SEQUENCE
   read(10,"(A)") aux !actual sequence
   read(10,"(A)") aux !snaps
-  read(10,"(A)") aux !""
+  if (planefit) then
+    read(10,"(A)") aux ! WIDTH
+    read(10,"(A)") aux ! HEIGHT
+    read(10,"(A)") aux ! ASPECT RATIO
+    read(10,"(A)") aux !
+  else
+    read(10,"(A)") aux !""
+  end if
 
   read(10,"(A)") aux !First column...
 
@@ -755,10 +1067,18 @@
     N = nbp-my_bp
   end if
   !And if we'll read sizes or just bendings
+  !If a plane was fitted, then we have bendings, widths, heigths and aspect ratios
+  !if not only bendings
   !Let's also determine the format that well use
-  n_parms = 2
-  F_FORM_1 = F_AVB_2
-  F_FORM_2 = F_AVB_3
+  if (planefit) then
+    n_parms = 2
+    F_FORM_1 = F_PARM_2
+    F_FORM_2 = F_PARM_3
+  else
+    n_parms = 2
+    F_FORM_1 = F_AVB_2
+    F_FORM_2 = F_AVB_3
+  end if
   !NOTE that it is not arranged in the same way that in serraLINE. This is
   !because we only want values for one length
   allocate(parms(N,n_parms), stat=ierror)
@@ -826,6 +1146,206 @@
     end do
 
   end subroutine nextpar
+!----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+  !This subroutine basically allocates bp_fitting
+  subroutine read_fitting_bps(strinng, bp_fitting)
+  implicit none
+  character(1200) :: strinng
+  character(len=1200), dimension(100) :: more_c
+  integer, allocatable, intent(out) :: bp_fitting(:)
+  integer, allocatable :: temporal(:)
+  integer :: i, j, k, l, s, p, a ,b, m, first, middle, last, ierror
+  logical :: first_comma, escape
+
+  escape = .false.
+  k = 0
+  more_c(1)(:) = strinng
+
+  !First, find how many coordinates
+  do i=1,len(strinng)
+
+    if ( more_c(1)(i:i) == "'")  then   !Begins!
+      p = i+1
+
+      do l=1,100               !l line
+        if (l > 1) then        !First line we already have it (strinng)
+          read(5,"(A)") strinng!more_c(l)
+          more_c(l)(:) = strinng
+        end if
+
+ !       first_comma = .true. !It is the first comma
+
+        first = p
+        do j= p, len(strinng)
+
+          !,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+          if (more_c(l)(j:j) == "," ) then !if comma
+!            if (first_comma) k=k+1
+            k = k+1
+ !           first_comma = .false.
+            first = j+1
+ 
+          !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+          else if (more_c(l)(j:j) == ":") then
+            middle = j
+            do s=j+1,len(strinng)
+              if (more_c(l)(s:s) == "," .or. more_c(l)(s:s) == "'" .or. more_c(l)(s:s) == "&" ) then
+                last = s-1
+              end if
+            end do        !close s
+
+            !Count how many numbers from a bp to b bp (a:b)
+            read(more_c(l)(first:middle-1),*) a
+            read(more_c(l)(middle+1:last),*) b
+!            if (a > b) stop "Write fitting bp from lowest to highest value"
+            k = k + abs(b - a)
+            first = j+1
+!            first_comma = .false.
+
+          !&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+          else if (more_c(l)(j:j) == "&") then
+            k = k+1
+            exit                                !Just exit loop
+
+          !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+          else if (more_c(l)(j:j) == "'") then
+            k = k+1
+            escape = .true. 
+            exit
+
+          else if (j==len(strinng) ) then
+            stop "Write ' or & in bp fittings"
+
+          end if
+          !------------------------------------------------------------------------------------------ 
+
+        end do           !close j
+        
+        p = 1
+
+        if (escape) exit !escape l
+      end do             !close l
+
+
+      if (escape) exit   !escape i
+
+    end if
+
+  end do                 !close i
+
+  if (k <= 2) stop "Invalid number of bp to be fitted"
+
+  allocate(temporal(k), stat=ierror)
+  if (ierror /= 0) stop "Error in allocating indeces for bp fittings"
+
+  !Now, lest get the values
+  escape = .false.
+  k = 0
+  temporal = 0   !To don't get
+  !First, find how many coordinates
+  do i=1,len(strinng)
+
+    if ( more_c(1)(i:i) == "'")  then   !Begins!
+      p = i+1
+
+      do l=1,100               !l line
+
+        first_comma = .true. !It is the first comma
+
+        first = p
+        do j= p, len(strinng)
+
+          !,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+          if (more_c(l)(j:j) == "," ) then !if comma
+            k = k+1
+            read(more_c(l)(first:j-1),*) temporal(k)
+            first = j+1
+
+          !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+          else if (more_c(l)(j:j) == ":") then
+            middle = j
+            do s=j+1,len(strinng)
+              if (more_c(l)(s:s) == "," .or. more_c(l)(s:s) == "'" .or. more_c(l)(s:s) == "&" ) then
+                last = s-1
+              end if
+            end do        !close s
+
+            !Count how many numbers from a bp to b bp (a:b)
+            read(more_c(l)(first:middle-1),*) a
+            read(more_c(l)(middle+1:last),*) b
+            do m = a, b-1
+              k = k + 1
+              temporal(k) = m
+            end do
+            first = j+1
+
+          !&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+          else if (more_c(l)(j:j) == "&") then
+            k = k + 1
+            read(more_c(l)(first:j-1),*) temporal(k)
+            exit                                !Just exit loop
+
+          !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+          else if (more_c(l)(j:j) == "'") then
+            k = k + 1
+            read(more_c(l)(first:j-1),*) temporal(k)
+            escape = .true. 
+            exit
+
+          else if (j==len(strinng) ) then
+            stop "Write ' or & in bp fittings"
+
+          end if
+          !------------------------------------------------------------------------------------------ 
+        end do           !close j
+        
+        p = 1
+
+        if (escape) exit !escape l
+      end do             !close l
+
+
+      if (escape) exit   !escape i
+
+    end if
+
+  end do                 !close i
+
+
+  !Let's clean up our indices (remove repetead, zero and negative indices)
+  k = 0
+  do i = 1, size(temporal)
+    if (i > 1) then
+      if (temporal(i) > 0 .and. all( temporal(1:i-1) /= temporal(i) ) ) k = k+1
+    else
+      if (temporal(i) > 0 ) k = k+1
+    end if
+  end do
+
+  if (k <= 2) stop "Invalid number bp to be fitted"
+ 
+  allocate(bp_fitting(k), stat=ierror)
+  if (ierror /= 0) stop "Error in allocating bp fitting indices"
+
+  !Now, let's fill them
+  k = 0
+  do i = 1, size(temporal)
+    if (i > 1) then
+      if (temporal(i) > 0 .and. all( temporal(1:i-1) /= temporal(i) ) ) then
+        k = k+1
+        bp_fitting(k) = temporal(i)
+      end if
+    else
+      if (temporal(i) > 0 ) then
+         k = k+1
+        bp_fitting(k) = temporal(i)
+      end if
+    end if
+  end do
+
+  end subroutine read_fitting_bps
 !----------------------------------------------------------------------
 
   end module IO_mod

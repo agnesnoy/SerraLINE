@@ -527,10 +527,10 @@
  !This subroutine is  writes the output file with the bending angles, 
  !widths and heights, This is for opened structures
  subroutine write_av_parms(nbp,ndim,mdim,frames,seq,avstd_bends, &
-          & avstd_width, avstd_height, avstd_aratio)
+          & avstd_width, avstd_height, avstd_aratio,t_length)
  implicit none
 
- integer, intent(in) :: nbp, ndim, mdim, frames
+ integer, intent(in) :: nbp, ndim, mdim, frames, t_length
  character(1), intent(in) :: seq(nbp)
  real(dp), intent(in) :: avstd_bends(2,mdim), avstd_width(2), &
                        & avstd_height(2), avstd_aratio(2)
@@ -547,13 +547,14 @@
   write(10,*) ""
   write(10,*) "OPENED STRUCTURE"
   write(10,*) "METHOD: PROJECTION"
-  write(10,*) "BASE PAIRS ", ndim
+  write(10,*) "BASE PAIRS ", nbp!ndim
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
-  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
   write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
   write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
   write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
   l=0
@@ -581,12 +582,12 @@
  !This subroutine is similar to write_av_parms subroutine but this one is for
  ! closed structures, which means that per every length l, there are 
  ! nbp parameters. (There are n lengths also)
- subroutine write_c_av_parms(nbp,frames,seq,avstd_bends,avstd_width,avstd_height,avstd_aratio)
+ subroutine write_c_av_parms(nbp,frames,seq,avstd_bends,avstd_width,avstd_height,avstd_aratio,t_length)
  implicit none
 
- integer, intent(in) :: nbp, frames
+ integer, intent(in) :: nbp, frames, t_length
  character(1), intent(in) :: seq(nbp)
- real(dp), intent(in) :: avstd_bends(2,nbp,nbp-1), avstd_width(2), & 
+ real(dp), intent(in) :: avstd_bends(2,nbp,nbp-1), avstd_width(2), &
                        & avstd_height(2), avstd_aratio(2)
 
  character(1) :: c_seq(2*nbp)
@@ -609,10 +610,11 @@
   write(10,*) "BASE PAIRS ", nbp
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
-  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
   write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
   write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
   write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
   do l=1,nbp-1
@@ -643,10 +645,10 @@
 !-----------------------------------------------------------------------
  ! This subroutine  writes the output file with the bending angles
  ! and is for opened structures
- subroutine write_av_bends(nbp,ndim,mdim,frames,seq,avstd_bends)
+ subroutine write_av_bends(nbp,ndim,mdim,frames,seq,avstd_bends,t_length)
  implicit none
 
- integer, intent(in) :: nbp, ndim, mdim, frames
+ integer, intent(in) :: nbp, ndim, mdim, frames, t_length
  character(1), intent(in) :: seq(nbp)
  real(dp), intent(in) :: avstd_bends(2,mdim)
 
@@ -662,10 +664,11 @@
   write(10,*) ""
   write(10,*) "OPENED STRUCTURE"
   write(10,*) "METHOD: WITHOUT PROJECTION"
-  write(10,*) "BASE PAIRS ", ndim
+  write(10,*) "BASE PAIRS ", nbp!ndim
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
-  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
   l=0
@@ -693,10 +696,10 @@
  ! This subroutine is similar to write_av_bends subroutine but this one is for
  ! closed structures, which means that per every length l, there are 
  ! nbp parameters. (There are n lengths also)
- subroutine write_c_av_bends(nbp,frames,seq,avstd_bends)
+ subroutine write_c_av_bends(nbp,frames,seq,avstd_bends,t_length)
  implicit none
 
- integer, intent(in) :: nbp, frames
+ integer, intent(in) :: nbp, frames, t_length
  character(1), intent(in) :: seq(nbp)
  real(dp), intent(in) :: avstd_bends(2,nbp,nbp-1)
 
@@ -720,7 +723,8 @@
   write(10,*) "BASE PAIRS ", nbp
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
-  write(10,*) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
+  write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
   do l=1,nbp-1
@@ -791,12 +795,14 @@
   ! bp_fitting indicates which bp to fit the plane
   ! print_print indicates if we are going to print the projected trajectory
   ! xyz indicates if in xyz format or crd (if falsE)
+  ! t_length specifies the length between base-pairs to calculate the
+  ! tangent vectors.
   ! All this information is indicated in the input file "s_line.in
   ! If topology is not provided, SerraLINE can still run but without
   ! Detail in the sequence
 
   subroutine SerraLINE_inputs(traj,top,circle_str,str,nbp,bp_fitting,fitplane, &
-                            & print_proj,xyz)
+                            & print_proj,xyz,t_length)
   implicit none
 
   !top, traj : directories
@@ -804,7 +810,7 @@
   !fitplane : if true, then a plane will be fitted
   character(1200), intent(out) :: top, traj
   logical, intent(out) :: circle_str, fitplane, print_proj, xyz
-  integer, intent(out) :: str, nbp
+  integer, intent(out) :: str, t_length, nbp
   logical :: not_good
   integer, allocatable :: bp_fitting(:)
   character(1200) :: strinng, aux
@@ -856,6 +862,12 @@
 
   if (not_good) stop "Could not determined bps for fitting"
  
+  !Tangent length
+  call nextpar
+  read(5,*,iostat=ierror) t_length
+  if (ierror /=0) stop "Error in reading tangent length input"
+  if ( t_length <=0 ) stop "Please type tangent length > 0"
+
   !Topology
   call nextpar
   read(5,"(A)",iostat=ierror) top
@@ -968,6 +980,9 @@
 
   end if
 
+  !Tangents length
+  write(6,"(A,I5)") "Tangent length =", t_length
+
   !And it is done!
 
   end subroutine SerraLINE_inputs 
@@ -1000,12 +1015,13 @@
 !-----------------------------------------------------------------------
   !Reads parameters in serraline.out and extracts them for a particular
   !length of interest (my_bp)
-  subroutine read_parms( in_file, my_bp, N, nbp, parms, planefit, F_FORM ) 
+  subroutine read_parms( in_file, my_bp, N, nbp, parms, t_length, planefit, F_FORM )
+
   implicit none
   character(1200), intent(in) :: in_file
   character(1200), intent(out) :: F_FORM
   integer, intent(in) :: my_bp
-  integer, intent(out) :: N, nbp
+  integer, intent(out) :: N, nbp, t_length
   real(dp), allocatable, intent(out) :: parms(:,:)
   logical, intent(out) :: planefit
   integer ::  i, j, l, n_parms, bp, ierror
@@ -1046,17 +1062,27 @@
     read(10,"(A)") aux ! WIDTH
     read(10,"(A)") aux ! HEIGHT
     read(10,"(A)") aux ! ASPECT RATIO
-    read(10,"(A)") aux !
-  else
-    read(10,"(A)") aux !""
   end if
+
+  read(10,F_PARM_5) aux, t_length ! TANGENT LENGTH
+
+  read(10,"(A)") aux !""
 
   read(10,"(A)") aux !First column...
 
   !Let's check if we have a valid my_bp
   if (my_bp < 1) stop "Distance of interest must be positive and greater than 0"
-  if (my_bp > nbp-1) then
-    write(6,*) "Distance of interest must not be greater than ",nbp-1
+
+  if (c_str) then    !If it is a circle
+    if (my_bp > nbp-1) then
+      write(6,*) "Distance of interest must not be greater than ",nbp-1
+      stop
+    end if
+  else               !If linear
+    if (my_bp > nbp-t_length) then
+      write(6,*) "Distance of interest must not be greater than ",nbp-t_length
+      stop
+    end if
   end if
 
   !We have what we need for allocating our parms array
@@ -1064,7 +1090,7 @@
   if (c_str) then
     N = nbp
   else
-    N = nbp-my_bp
+    N = nbp-my_bp - t_length !+ 1
   end if
   !And if we'll read sizes or just bendings
   !If a plane was fitted, then we have bendings, widths, heigths and aspect ratios

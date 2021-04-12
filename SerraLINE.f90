@@ -51,9 +51,11 @@
 ! mdim : number of parameters calculated for opened structure and number of parameters per length
 !        for closed structures (= nbp)
 ! max_width  : index of maximum width calculated (c_ is for circular structures)
-! max_height : index of maximum height calculated (c_ is for circular structures)
-  integer :: nbp, box, str, frames, n_fitting, ierror, &
-           & ndim, mdim, & !mdim is the extended dimension
+! max_height : index of maximum height calculatedo (c_ is for circular structures)
+! t_length : is the length in which tangent vectors will be defined
+  integer :: nbp, box, str, frames, n_fitting, t_length, ierror, &
+           & ndim, mdim, &   !mdim is the extended dimension for sizes
+           & nldim, mldim, & !dimensions for tangents and bends of linear structure
            & i, l
 
 ! best : best plane fitted for k snapshot
@@ -101,7 +103,7 @@
   !closed or linear, and if there are specific atoms to fit.
   !There is an option where no fitting can be performed
   call SerraLINE_inputs(traj,top,circle_str,str,nbp,bp_fitting, &
-                      & fitplane,print_proj,xyz)
+                      & fitplane,print_proj,xyz,t_length)
   !str=1 !Reading will be performed as if it were a single stranded structure
 
   !READING SECTION
@@ -127,6 +129,9 @@
   write(6,*) "Reading trajectory file"
   call coordinates_amber_WrLINE(coords,nbp,frames,traj,box,str)
 
+  !Small warning for tangent lengths!!!!!!1
+  if ( .not. circle_str .and. t_length > nbp-2 ) stop "Tangent length must be higher than N-2 for opened structures"
+  if ( circle_str .and. t_length > nbp-1 ) stop "Tangent length must be higher than N-1 for closed structures"
 
   !If the fitting will be performed, let's clean bp_fitting (in case of bp greater than nbp)
   if (fitplane) then
@@ -183,8 +188,11 @@
     mdim = nbp
   else         
     ! opened structure 
-    ndim = nbp-1
+    ndim = nbp-1          !These first two will be used in sizes since they lose one distance
     mdim = ndim*(ndim-1)/2
+    nldim = nbp-t_length  !But in tangents and bends, they lose t_length bps
+    mldim = nldim*(nldim-1)/2
+
   end if
 
   !-----------------------------------------------------------------------------------
@@ -272,16 +280,17 @@
  
   !Note that this process is the same even if a plane was not fitted
 
-  !If the structure is not a circle then the last bp does not has tangent vector
+  !If the structure is not a circle then the last t_length bps do not have tangent vectors
+
   write(6,*) "Calculating tangent vectors"
   if (circle_str) then
     allocate(tangents(3,nbp,frames), stat=ierror)
   else
-    allocate(tangents(3,nbp-1,frames), stat=ierror)
+    allocate(tangents(3,nldim,frames), stat=ierror)
   end if
   if(ierror/=0) stop "Error in allocating tangent vectors"
  
-  call get_tangent_vectors(coords,nbp,frames,circle_str,tangents)
+  call get_tangent_vectors(coords,nbp,frames,circle_str,tangents,t_length)
  
   !Coordinates are not longer needed
   deallocate(coords, stat=ierror)
@@ -310,14 +319,14 @@
   else         
     ! opened structure 
 
-    allocate(bends(frames,mdim), avstd_bends(2,mdim), stat=ierror)
+    allocate(bends(frames,mldim), avstd_bends(2,mldim), stat=ierror)
     if(ierror/=0) stop "Error in allocating bendings"
 
     !Calculate bending angles for opened structure
     if (fitplane) then                                   !If a fitting was performed
-      call get_bendings(ndim,frames,G_n,best,tangents,bends) 
+      call get_bendings(nldim,frames,G_n,best,tangents,bends) 
     else
-      call get_bendings_nofit(ndim,frames,tangents,bends)    
+      call get_bendings_nofit(nldim,frames,tangents,bends)    
     end if
 
   end if
@@ -372,7 +381,7 @@
     !Opened structure
 
     !bends
-    do i=1,mdim
+    do i=1,mldim
       avstd_bends(:,i) = average_std(bends(1:frames,i),frames)
     end do
 
@@ -408,12 +417,12 @@
 
       !Write parameters
       call write_c_av_parms(mdim,frames,seq,c_avstd_bends,avstd_width,avstd_height, &
-                          & avstd_aspect_ratio)
+                          & avstd_aspect_ratio,t_length)
       
     else
 
       !Write bendings
-      call write_c_av_bends(nbp,frames,seq,c_avstd_bends)
+      call write_c_av_bends(nbp,frames,seq,c_avstd_bends,t_length)
 
     end if   !fitplane
 
@@ -422,13 +431,13 @@
     if (fitplane) then
 
       !Write parameters
-      call write_av_parms(nbp,ndim,mdim,frames,seq,avstd_bends,avstd_width,avstd_height, &
-                        & avstd_aspect_ratio)
+      call write_av_parms(nbp,nldim,mldim,frames,seq,avstd_bends,avstd_width,avstd_height, &
+                        & avstd_aspect_ratio,t_length)
 
     else
 
       !Write bendings
-      call write_av_bends(nbp,ndim,mdim,frames,seq,avstd_bends)
+      call write_av_bends(nbp,nldim,mldim,frames,seq,avstd_bends,t_length)
       
     end if !fitplane
 

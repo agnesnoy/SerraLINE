@@ -1,4 +1,4 @@
-!                                                              04/07/2020
+!                                                              09/04/2021
 ! This program extracts information from serraline.out for a particular length,
 !
 !    -----------------------------------------------------------------------
@@ -25,7 +25,7 @@
 
   implicit none
 
-  integer :: i, j, N, nbp, my_bp, ierror
+  integer :: i, j, N, nbp, my_bp, t_length, ierror
   character(1200) :: in_file, out_file, F_FORM !Format
   real(dp), allocatable :: parms(:,:), mid(:), & !Point in the middle of two bp
                          & aux_r1(:)
@@ -42,7 +42,7 @@
  !-----------------------------------------------
  !Read serraline.out
  !The next subroutine figures out if is closed structure and if a plane was fitted
- call read_parms( in_file, my_bp, N, nbp, parms, planefit, F_FORM )
+ call read_parms( in_file, my_bp, N, nbp, parms, t_length, planefit, F_FORM )
 
  !we didn't use planefit, but could be useful in the future (or not?)
 
@@ -51,22 +51,9 @@
  !Now let's just write the results with no particular format
 
   !Let's first prepare the output file
-  ! 1 digit
-  if (my_bp < 10) then
-    write(out_file,"(A12,I1,A4)") "subfragment_", my_bp, ".out"
-  ! 2 digits
-  else if (my_bp > 9 .and. my_bp < 100) then
-    write(out_file,"(A12,I2,A4)") "subfragment_", my_bp, ".out"
-  ! 3 digits
-  else if (my_bp > 99 .and. my_bp < 1000) then
-    write(out_file,"(A12,I3,A4)") "subfragment_", my_bp, ".out"
-  ! 4 difits
-  else if (my_bp > 999 .and. my_bp < 10000) then
-    write(out_file,"(A12,I4,A4)") "subfragment_", my_bp, ".out"
-  ! too big
-  else
-    stop "BP distance too big, modify Extract.f90"
-  end if
+  write(out_file,*) my_bp
+  out_file = adjustl(out_file)
+  out_file = "subfragment_"//trim(out_file)//".out"
 
   !Now, write
   open(unit=11, file=trim(out_file), status="replace", action="write", iostat=ierror)
@@ -82,11 +69,10 @@
   do i=1,N
 
     !Calculate mid point
-    mid(i) = real( 2*i + my_bp, dp) / 2.0_dp
-    mid(i) = mid(i) + 0.5_dp
+    mid(i) = real( 2*i + my_bp + t_length, dp) / 2.0_dp
     if (  mid(i) - real(nbp,dp)  > eps ) mid(i) = mid(i) - real(nbp,dp)
 
-  end do
+  end do !i
 
   !Sort data
   do j = N-1, 1, -1

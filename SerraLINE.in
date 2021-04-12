@@ -35,6 +35,15 @@ c Finally, to perform any fitting you should indicate at least 3 bps
 
    1
 c -------------------------------------------
+c Tangent vectors point in the direction of bp i to bp i+l,
+c with l=1, the vectors are tangent to the contour.
+c But experiments can't do this because l > 1.
+c Please type l which must be: l > 0 and l < N-1 for closed structures
+c and l < N-2 for opened structures (N -> number of bases/elements).
+c NOTE: for linear structures, l elements will be lost
+
+   1
+c -------------------------------------------
 c Topology file                                         
 c                                          
 

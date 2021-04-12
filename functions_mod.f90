@@ -1,4 +1,4 @@
-! Module containing all the mathematical functions needed for      03/04/2019
+! Module containing all the mathematical functions needed for      09/04/2020
 ! SerraLINE
 !
 !    -----------------------------------------------------------------------
@@ -238,30 +238,36 @@
 
 !-----------------------------------------------------------------------
  !This subroutine is used in SerraLINE
- subroutine get_tangent_vectors(coords,N,frames,circle_str,tangents)
+ subroutine get_tangent_vectors(coords,N,frames,circle_str,tangents,t_length)
  
  implicit none
  
  logical, intent(in) :: circle_str
- integer, intent(in) :: N,frames
+ integer, intent(in) :: N,frames,t_length
  real(dp), intent(in) :: coords(:,:,:)
  real(dp), intent(out) :: tangents(:,:,:)
- integer :: i,k
+ integer :: i,k,j
 
  do k=1,frames
 
-  do i=1,N-1
-    tangents(:,i,k) = coords(:,i+1,k) - coords(:,i,k)
+  do i=1,N-t_length !1
+    tangents(:,i,k) = coords(:,i+t_length,k) - coords(:,i,k)
     tangents(:,i,k) = normalize_vector(tangents(:,i,k),3)
   end do
 
   !If its a closed structure then the last bp has tangent vector
   if (circle_str) then
-    tangents(:,N,k) = coords(:,1,k) - coords(:,N,k)
-    tangents(:,N,k) = normalize_vector(tangents(:,N,k),3)
+    j=0
+
+    do i=N-t_length+1, N
+      j=j+1 !this will help
+      tangents(:,i,k) = coords(:,j,k) - coords(:,i,k)
+      tangents(:,i,k) = normalize_vector(tangents(:,i,k),3)
+    end do !i
+
   end if
 
- end do
+ end do !k
 
  end subroutine get_tangent_vectors
 !-----------------------------------------------------------------------

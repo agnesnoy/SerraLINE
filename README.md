@@ -51,11 +51,13 @@ Closed (circular) and opened (linear) DNAs can be processed by
 SerraLINE, but the user is required to specify this in the
 input file SerraLINE.in. 
 
-Bending angles are obtained through tangent vectors, where the 
-tangent vector of the last base-pair is lost for opened structures.
+The standard method consists in bending angles being obtained 
+through tangent vectors constructed between two consecutive 
+base-pairs along the curvature, where the tangent vector of the 
+last base-pair is lost in case of opened structures.
 This causes to have (N-1)(N-2)/2 bendings for opened structures, 
 whereas N(N-1) for closed structures, where the tangent vectors of
-all base-pairs can be obtained. 
+all base-pairs can be obtained.  
 
 SerraLINE is composed of two main programs:
 
@@ -75,8 +77,14 @@ This projection method mimics experiments where structures are
 visualized on a two dimensional plane, and quantities such as width, 
 height and aspect ratio (width/height) can be calculated.
 
-For both methods, bending angles are calculated with the
-same criteria.
+Tangent vectors can also be defined as the line that connects
+base-pair i with base-pair j=i+l, where the user can specify
+the parameter l. The porpuse of defining this "tangent length" l,
+is to further approach single molecule experiments, where bendings
+are usually measured with an equivalent process.
+
+For both methods (projection or not), bending angles are calculated 
+following the same criteria.
 
 An example is provided for running SerraLINE and processing 
 results.
@@ -134,12 +142,16 @@ input file:
         that best fits, or, specifying with ' ', you can 
         fit a plane to a selection of base-pairs. This 
         selection of points should be at least 3 bps.
-    5.- Path to the topology file. This input will be ignored if
+    5.- Tangent length specyfication. Type the length l that
+        defines how the tangent vectors are constructed.
+        Beware that for opened structurs l elements (bendings)
+        will be lost.
+    6.- Path to the topology file. This input will be ignored if
         you indicated that you don't have a topology.
-    6.- Path to the trajectory file. This trajectory can be in
+    7.- Path to the trajectory file. This trajectory can be in
         amber format (*crd or *x) and WrLINE outputs format
         ( *3col and *xyz).
-    7.- In case the projection method was selected, the projected
+    8.- In case the projection method was selected, the projected
         trajectory can be written in xyz or crd format. Type 1
         for writing the projected trajectory or 0 for not.
 

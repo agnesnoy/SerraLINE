@@ -1,4 +1,4 @@
-!------------------------------------------------------------- 04/07/2020
+!------------------------------------------------------------- 16/04/2021
 ! This module contains functions and subroutines needed for reading
 ! and writing.
 !
@@ -527,13 +527,17 @@
  !This subroutine is  writes the output file with the bending angles, 
  !widths and heights, This is for opened structures
  subroutine write_av_parms(nbp,ndim,mdim,frames,seq,avstd_bends, &
-          & avstd_width, avstd_height, avstd_aratio,t_length)
+          & avstd_width, avstd_height, avstd_aratio,t_length, &
+          & avg_dist, max_dist, avg_dist_rel, max_dist_rel)
+ 
  implicit none
 
  integer, intent(in) :: nbp, ndim, mdim, frames, t_length
  character(1), intent(in) :: seq(nbp)
  real(dp), intent(in) :: avstd_bends(2,mdim), avstd_width(2), &
-                       & avstd_height(2), avstd_aratio(2)
+                       & avstd_height(2), avstd_aratio(2), &
+                       & avg_dist(2), max_dist(2), &
+                       & avg_dist_rel(2), max_dist_rel(2)
 
  character(360) :: output_file
  integer :: i, j, l, ierror
@@ -554,6 +558,10 @@
   write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
   write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
   write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE:", avg_dist(:)
+  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE:", avg_dist_rel(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist_rel(:)
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
@@ -582,13 +590,18 @@
  !This subroutine is similar to write_av_parms subroutine but this one is for
  ! closed structures, which means that per every length l, there are 
  ! nbp parameters. (There are n lengths also)
- subroutine write_c_av_parms(nbp,frames,seq,avstd_bends,avstd_width,avstd_height,avstd_aratio,t_length)
+ subroutine write_c_av_parms(nbp,frames,seq,avstd_bends,avstd_width, &
+                           & avstd_height,avstd_aratio,t_length, &
+                           & avg_dist, max_dist, &
+                           & avg_dist_rel, max_dist_rel)
  implicit none
 
  integer, intent(in) :: nbp, frames, t_length
  character(1), intent(in) :: seq(nbp)
  real(dp), intent(in) :: avstd_bends(2,nbp,nbp-1), avstd_width(2), &
-                       & avstd_height(2), avstd_aratio(2)
+                       & avstd_height(2), avstd_aratio(2), &
+                       & avg_dist(2), max_dist(2), &
+                       & avg_dist_rel(2), max_dist_rel(2)
 
  character(1) :: c_seq(2*nbp)
  character(360) :: output_file
@@ -614,6 +627,10 @@
   write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
   write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
   write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE:", avg_dist(:)
+  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE:", avg_dist_rel(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist_rel(:)
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
   write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
@@ -1062,6 +1079,10 @@
     read(10,"(A)") aux ! WIDTH
     read(10,"(A)") aux ! HEIGHT
     read(10,"(A)") aux ! ASPECT RATIO
+    read(10,"(A)") aux ! AVG DIST 
+    read(10,"(A)") aux ! MAX DIST
+    read(10,"(A)") aux ! AVG DIST R
+    read(10,"(A)") aux ! MAX DIST R
   end if
 
   read(10,F_PARM_5) aux, t_length ! TANGENT LENGTH

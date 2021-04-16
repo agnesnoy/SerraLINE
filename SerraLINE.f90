@@ -1,4 +1,4 @@
-!						03/08/2020
+!						16/04/2021
 ! SerraLINE: MAIN
 ! Calculates bending angles and can also fit a best plane to the structure or
 ! to some specific atoms. If a fitting is performed, then the program also 
@@ -90,7 +90,17 @@
           & avstd_bends(:,:), &             
           & c_bends(:,:,:), c_avstd_bends(:,:,:), & 
           & width(:), height(:), aspect_ratio(:), &
-          & avstd_width(:), avstd_height(:), avstd_aspect_ratio(:)
+          & avstd_width(:), avstd_height(:), avstd_aspect_ratio(:), &
+          & avg_dist_frame(:), max_dist_frame(:), &
+          & avg_dist_rel_frame(:), max_dist_rel_frame(:)
+
+! avg_dist : average of average distances between base-pairs and fitted plane
+! max_dist : average maximum distance between base-pairs and fitted plane
+! both of these have 1-average and 2-standard deviation
+! *_frame  : (look up), means the distance per frame.
+! *_rel    : means relative to the longest distance in projected structure (Height)
+  real(dp) :: avg_dist(2), max_dist(2), &
+            & avg_dist_rel(2), max_dist_rel(2)
 
 !------------------------------------------------------------------------------------------------
 !------------------------------------------------------------------------------------------------
@@ -117,7 +127,7 @@
   else
     allocate(seq(nbp), stat=ierror)
     if (ierror /= 0) stop "Error in allocating sequence"
-    seq = " "
+    seq = "X"
   end if
 
   !We do not care about ring atoms, we suppose that the topology file only 
@@ -211,7 +221,13 @@
     allocate(G_n(3,3,frames), best(frames), stat=ierror)
     if(ierror/=0) stop "Error in allocating tangent vectors"
 
-    call project_coordinates_G_plane(coords, nbp, frames, n_fitting, bp_fitting, G_n, best)
+
+    !Allocate the distances
+    allocate(avg_dist_frame(frames), max_dist_frame(frames), stat=ierror)
+    if(ierror/=0) stop "Error in allocating distances"
+
+    call project_coordinates_G_plane(coords, nbp, frames, n_fitting, bp_fitting, G_n, best, &
+                                     avg_dist_frame, max_dist_frame)
 
     !AND PRINT THE PROJECTED TRAJECTORIES
     if (print_proj) then
@@ -338,6 +354,30 @@
     deallocate(G_n, best, stat=ierror) !No longer needed
     if (ierror/=0) stop "Error in deallocating planes"
   end if
+
+  !Relative sizes SECTION 
+  !-----------------------------------------------------------------------------------
+  !Before calculating averages, I need to get the relative sizes in (%) for each
+  !frame. This is done for the projection method
+  if (fitplane) then
+
+    !Allocate arrays first
+    allocate(avg_dist_rel_frame(frames), max_dist_rel_frame(frames), stat=ierror)
+    if(ierror/=0) stop "Error in allocating relative distances"
+
+    !avg_dist first
+    do i = 1, frames
+       avg_dist_rel_frame(i) = 100.0_dp*(avg_dist_frame(i)/height(i))
+    end do !i
+    !Now max_dist
+    do i = 1, frames
+       max_dist_rel_frame(i) = 100.0_dp*(max_dist_frame(i)/height(i))
+    end do !i 
+
+    !I separated in loops to make it faster (actually, it won't make a big difference...)
+  end if
+  !-----------------------------------------------------------------------------------
+
  
   !Averages, standard deviations SECTION 
   !-----------------------------------------------------------------------------------
@@ -374,6 +414,16 @@
       deallocate(width, height, aspect_ratio, stat=ierror) !No longer needed
       if (ierror/=0) stop "Error in deallocating widths, heights and aspect ratios"
 
+      !avg_dist, max_dist and relative sizes
+      avg_dist = average_std(avg_dist_frame, frames)
+      max_dist = average_std(max_dist_frame, frames)
+      avg_dist_rel = average_std(avg_dist_rel_frame, frames)
+      max_dist_rel = average_std(max_dist_rel_frame, frames)
+
+      deallocate( avg_dist_frame, max_dist_frame, &
+                & avg_dist_rel_frame, max_dist_rel_frame, &
+                & stat=ierror) !No longer needed as well
+
     end if  !fitplane
 
   else      !circle_str
@@ -404,6 +454,16 @@
       deallocate(width, height, aspect_ratio, stat=ierror) !No longer needed
       if (ierror/=0) stop "Error in deallocating widths, heights and aspect ratios"
 
+      !avg_dist, max_dist and relative sizes
+      avg_dist = average_std(avg_dist_frame, frames)
+      max_dist = average_std(max_dist_frame, frames)
+      avg_dist_rel = average_std(avg_dist_rel_frame, frames)
+      max_dist_rel = average_std(max_dist_rel_frame, frames)
+
+      deallocate( avg_dist_frame, max_dist_frame, &
+                & avg_dist_rel_frame, max_dist_rel_frame, &
+                & stat=ierror) !No longer needed as well
+
     end if !fitplane
 
   end if   !circle_str
@@ -417,7 +477,8 @@
 
       !Write parameters
       call write_c_av_parms(mdim,frames,seq,c_avstd_bends,avstd_width,avstd_height, &
-                          & avstd_aspect_ratio,t_length)
+                          & avstd_aspect_ratio,t_length,avg_dist,max_dist, &
+                          & avg_dist_rel, max_dist_rel)
       
     else
 
@@ -432,7 +493,8 @@
 
       !Write parameters
       call write_av_parms(nbp,nldim,mldim,frames,seq,avstd_bends,avstd_width,avstd_height, &
-                        & avstd_aspect_ratio,t_length)
+                        & avstd_aspect_ratio,t_length,avg_dist,max_dist, &
+                        & avg_dist_rel, max_dist_rel)
 
     else
 

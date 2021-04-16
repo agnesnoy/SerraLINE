@@ -1,4 +1,4 @@
-!------------------------------------------------------------- 04/09/2021
+!------------------------------------------------------------- 16/04/2021
 ! This module contains parameters needed for SerraLINE
 !
 !    -----------------------------------------------------------------------
@@ -67,7 +67,7 @@
   !OUTPUT PARAMETERS (including bending)
   & F_PARM_1 = "(A15,A20)", F_PARM_2 = "(I4,A1,I4,6A1,2F10.3)", &
   & F_PARM_3 = "(I10,A10)", F_PARM_4 = "(A15,2F10.3)", &
-  & F_PARM_5 = "(A20,1I10)", &
+  & F_PARM_5 = "(A20,1I10)", F_PARM_6 = "(A50, 2F8.3)", &
 
   !BENDINGS (no widths, heights, ...)
   & F_AVB_1 = "(A15,A20)", F_AVB_2 = "(I4,A1,I4,6A1,2F10.3)", &
@@ -96,7 +96,7 @@
        & pi, rad_to_deg, eps, &
        & A_l, G_l, C_l, T_l, U_l, N1, C2, N3, C4, C5, C6, N7, C8, N9, &
        & F_AMB_T, F_PARM_1, F_PARM_2, F_PARM_3, F_PARM_4, F_PARM_5, &
-       & F_AVB_1, F_AVB_2, F_AVB_3, F_XYZ_T, &
+       & F_PARM_6, F_AVB_1, F_AVB_2, F_AVB_3, F_XYZ_T, &
        & e1, e2, e3
 
 !-----------------------------------------------------------------------

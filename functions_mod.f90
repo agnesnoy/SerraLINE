@@ -1,4 +1,4 @@
-! Module containing all the mathematical functions needed for      09/04/2020
+! Module containing all the mathematical functions needed for      16/04/2021
 ! SerraLINE
 !
 !    -----------------------------------------------------------------------
@@ -37,16 +37,27 @@
  !G_n is normal vector to the fitted plane and c is an auxiliar vector.
  !This subroutine uses the Jacobi diagonalization method to solve 
  !the SVD matrices (just one part), this is done to fit the best plane.
- subroutine project_coordinates_G_plane(coords, N, frames, n_fitting, bp_fitting, G_n, best)
+ subroutine project_coordinates_G_plane(coords, N, frames, n_fitting, bp_fitting, G_n, &
+                                        best, avg_dist_frame, max_dist_frame)
  real(dp), intent(inout) :: coords(:,:,:)
  integer,  intent(in) :: N, frames, n_fitting
  integer, allocatable, intent(in) :: bp_fitting(:)
  integer, intent(out) :: best(:)
- real(dp), intent(out) :: G_n(:,:,:)
+ real(dp), intent(out) :: G_n(:,:,:), avg_dist_frame(:), max_dist_frame(:)
  real(dp) :: b(3), c(3), A(3,N), U(3,3), S(3,3), &
-           & d(3)
+           & d(3), A_p(3), dist_to_plane(N)
+
  real(dp), allocatable :: A_fit(:,:)
- integer :: i, j, k, ierror
+ integer :: i, k, ierror
+
+ !UPDATE distance to plane.
+ !avg_dist and max_dist are returned. avg_dist is the average
+ !of the averages of all points to the plane. max_dist is the
+ !average of the maximum distances per frame. They are 2-dimension arrays
+ !where first dimension is the average and the second is the standard deviation.
+ !dist_to_plane, ... will be helping calculating these quantities.
+
+ avg_dist_frame=0.0_dp !needs to be 0
 
  !A are the coordinates centered at the origin.
  !A_p are the projected coordinates to some plane (U perpendicular)
@@ -58,7 +69,7 @@
     allocate(A_fit(3,n_fitting), stat = ierror)
     if (ierror/=0) stop "Error in allocating A_fit"
 
-    ! Fit plane to all coordinates--------------------------------------------
+    ! Fit plane to specified coordinates--------------------------------------------
     do k=1,frames
       !1.- Get centroid
       c = 0.0_dp
@@ -93,14 +104,25 @@
       if (best(k) <= 0 .or. best(k) >3) stop "Error finding best plane"
 
 
-     !Project coordinates to the plane j
-      do j=1,3
-        do i=1,N
-          b = A(:,i) - projv_u( A(:,i), U(:,best(k)) )
- 
-          coords(:,i,k) = b                 !New coordinates
-        end do
+      !Project coordinates to the plane 
+      do i=1,N
+        A_p=projv_u( A(:,i), U(:,best(k)) ) !Let's store the projected coordinates?
+        b = A(:,i) - A_p
+
+        coords(:,i,k) = b                 !New coordinates
+
+        dist_to_plane(i)=absv(A_p)        !The distance to the plane is just the 
+                                          !projection or perpendicular component
+
+        avg_dist_frame(k)=avg_dist_frame(k)+dist_to_plane(i)
+
       end do
+
+      avg_dist_frame(k)=avg_dist_frame(k)/real(N,dp) !Get it right
+
+      !The average of the maximum distance per snapshot
+      max_dist_frame(k)=maxval(dist_to_plane)    !This one is per frame, it will be used for
+                                                 !the std.
 
       !4.- We know the best plane [best(k)], now let's store
       ! the planes
@@ -138,15 +160,26 @@
       end do
       if (best(k) <= 0 .or. best(k) >3) stop "Error finding best plane"
 
+      !Project coordinates to the plane 
+      do i=1,N
+          A_p=projv_u( A(:,i), U(:,best(k)) ) !Let's store the projected coordinates?
 
-     !Project coordinates to the plane j
-      do j=1,3
-        do i=1,N
-          b = A(:,i) - projv_u( A(:,i), U(:,best(k)) )
- 
+          b = A(:,i) - A_p
+
           coords(:,i,k) = b                 !New coordinates
-        end do
+
+          dist_to_plane(i)=absv(A_p)        !The distance to the plane is just the 
+                                            !projection or perpendicular component
+
+          avg_dist_frame(k)=avg_dist_frame(k)+dist_to_plane(i)
+
       end do
+
+      avg_dist_frame(k)=avg_dist_frame(k)/real(N,dp) !Get it right
+
+      !The average of the maximum distance per snapshot
+      max_dist_frame(k)=maxval(dist_to_plane)    !This one is per frame, it will be used for
+                                                 !the std.
 
       !4.- We know the best plane [best(k)], now let's store
       ! the planes

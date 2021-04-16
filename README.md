@@ -76,6 +76,9 @@ given region specified by the user.
 This projection method mimics experiments where structures are 
 visualized on a two dimensional plane, and quantities such as width, 
 height and aspect ratio (width/height) can be calculated.
+SerraLINE can also measure the planarity of structures by
+calculating the average distance between 3D atom positions to
+the best fitted plane.
 
 Tangent vectors can also be defined as the line that connects
 base-pair i with base-pair j=i+l, where the user can specify

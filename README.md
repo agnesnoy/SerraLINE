@@ -39,56 +39,47 @@ ___________________________________________________________________
                        OVERVIEW
                        --------
 
-SerraLINE is a software for the calculation of bending angles at 
-different lengths (in bp steps)) from the global molecular contour 
-of simulations of DNA. This molecular contour filters out local 
-irregularities caused by the helical periodicity of DNA. 
-For instance, the molecular contours were calculated by WrLINE, 
-but any contour with the required format could be processed 
-by SerraLINE. 
+SerraLINE is a software that calculates bending angles, width, height,
+aspect ratio and deviatin from planarity of DNA molecules using the 
+global molecular contour WrLINE. 
 
-Closed (circular) and opened (linear) DNAs can be processed by 
-SerraLINE, but the user is required to specify this in the
-input file SerraLINE.in. 
+The molecular contour WrLINE defines a point for each bp.
 
-The standard method consists in bending angles being obtained 
-through tangent vectors constructed between two consecutive 
-base-pairs along the curvature, where the tangent vector of the 
-last base-pair is lost in case of opened structures.
-This causes to have (N-1)(N-2)/2 bendings for opened structures, 
-whereas N(N-1) for closed structures, where the tangent vectors of
-all base-pairs can be obtained.  
+SerraLINE can process closed (circular) and opened (linear) DNAs.
+
+Bending angles are measured between two tangent vectors that can be separated 
+by different number of bps (or points).
+
+Tangent vectors are constructed by the vectors joining two points that 
+can be consecutive or arbitrarily separated.
+This latter option is included to further approach microscopy imaging and 
+analysis with a measurable limited resolution. 
+
+SerraLINE can project the WrLINE contour to the plane that best fits the 
+molecule or to the given region specified by the user.
+This projection method mimics experiments where structures are 
+visualized on a two dimensional plane.
+Then, quantities such as width, height, aspect ratio (width/height)
+and deviation from planarity can be calculated.
+
+For both options (projection or not), bending angles are calculated 
+following the same criteria.
 
 SerraLINE is composed of two main programs:
 
-  - SerraLINE: Main process that calculates bending angles at 
+  - SerraLINE: Main program that calculates bending angles at 
                different lengths (in bp steps) and outputs 
                averages and standard deviations of these angles.
+               When the projection is actived, then it outputs 
+               width, height, aspect ratio and deviation from 
+               planarity
+               
 
   - Extract: Supportive process which filters out angles at a 
              particular length of interest (indicated by the user) 
              and sorts out the positions according to the 
-             hinge point.
+             middle point.
            
-Additionally to the standard method, SerraLINE can project the 
-input structure to the plane that best fits the molecule or a 
-given region specified by the user.
-This projection method mimics experiments where structures are 
-visualized on a two dimensional plane, and quantities such as width, 
-height and aspect ratio (width/height) can be calculated.
-SerraLINE can also measure the planarity of structures by
-calculating the average distance between 3D atom positions to
-the best fitted plane.
-
-Tangent vectors can also be defined as the line that connects
-base-pair i with base-pair j=i+l, where the user can specify
-the parameter l. The porpuse of defining this "tangent length" l,
-is to further approach single molecule experiments, where bendings
-are usually measured with an equivalent process.
-
-For both methods (projection or not), bending angles are calculated 
-following the same criteria.
-
 An example is provided for running SerraLINE and processing 
 results.
 
@@ -98,10 +89,10 @@ ___________________________________________________________________
 
 
 __________________________________________________________________
-                       INPUTS
-                       ------
+                       SerraLINE
+                       --------
 
-For running SerraLINE you only need a trajectory file:
+For running SerraLINE you need:
 
 
   - Trajectory file (Essential): 
@@ -119,36 +110,30 @@ For running SerraLINE you only need a trajectory file:
     sequence will not be obtained and the number of base-pairs will
     need to be provided by the user (in SerraLINE.in).
 
-
-For running the main process, the user has to indicate the path
-to the data files as well as the type of structure in the next
-input file:
-
-  - SerraLINE.in .
-    Seven inputs need to be indicated in this file. 
+  - SerraLINE.in 
+    Seven keys need to be indicated in this file. 
+    The different options are also specificed there.
     1.- The user first needs to specify the type of structure, 
         typing 0 for opened structure (linear DNA) and 1 for
         closed structure (circular DNA).
-    2.- In case that you have a topology file corresponding to 
-        a single stranded DNA, then type 1, whereas if the
-        topology corresponds to a double stranded DNA, then type
-        2. If you don't have a topology file, then type 0.
+    2.- In case you have a topology file corresponding to 
+        a single stranded DNA, type 1.
+        If the topology corresponds to a double stranded DNA, then type
+        2. 
+        If you don't have a topology file, then type 0.
     3.- In case that you type 0 in the previous input, then 
-        you are required to indicate the number of base-pairs in
-        the trajectory file. With this, SerraLINE can determine
-        the number of frames in the simulation. If you didn't
-        type 0 in the previous input, then SerraLINE will ignore
-        this input.
-    4.- Method selection. Type 1 if you want to perform the
-        standard method. For the projection method, by typing
-        0 the whole structure will be projected to the plane 
-        that best fits, or, specifying with ' ', you can 
-        fit a plane to a selection of base-pairs. This 
-        selection of points should be at least 3 bps.
-    5.- Tangent length specyfication. Type the length l that
+        you are required to indicate the number of base-pairs
+        of your molecule. With this, SerraLINE can determine
+        the number of frames in the simulation. 
+        If you didn't type 0 in the previous input, 
+        then SerraLINE will ignore this input.
+    4.- Projection of the trajectory on to the best fitted plane. 
+        Type 1 if you do not want to project.
+        Type 0 if you want to project
+        Type 'x:y' if you want to fit the plane to a selection o bp *x and y) 
+        This selection of points should be at least 3 bps.
+    5.- Tangent length specification. Type the length l that
         defines how the tangent vectors are constructed.
-        Beware that for opened structurs l elements (bendings)
-        will be lost.
     6.- Path to the topology file. This input will be ignored if
         you indicated that you don't have a topology.
     7.- Path to the trajectory file. This trajectory can be in
@@ -158,60 +143,44 @@ input file:
         trajectory can be written in xyz or crd format. Type 1
         for writing the projected trajectory or 0 for not.
 
-Another input file is required for executing the Extract process:
+To execute SerraLINE, simply type: 
+./SerraLINE < SerraLINE.in
+
+The SerraLINE produces the next output:
+
+  - SerraLINE.out.
+    Contains information of the structure analysed and average and
+    standard deviations of bending angles at different lengths.
+    If the projection method was used, average and standard
+    deviation of width, height, aspect ratio and deviation from
+    planarity will be given at the top.
+
+___________________________________________________________________
+
+
+
+___________________________________________________________________
+                       Extract
+                       ---------
+
+This utility program extracts the bend profile along the polymer 
+at a particular length. It has the following input
 
   - extract.in .
     Only two inputs are required this time.
     1.- Path to SerraLINE's output file (SerraLINE.out)
-    2.- Length of interest (in bp steps) to filter angles.
+    2.- Length of the bendinterest (in bp steps) of the ben.
 
 
-These input files (*in) can be renamed.
+Then type: 
+./Extract < extract.in
 
-___________________________________________________________________
-
-
-
-
-___________________________________________________________________
-                       EXECUTION
-                       ---------
-
-To execute SerraLINE, simply type: SerraLINE < SerraLINE.in
-
-This will generate the output "SerraLINE.out"
-
-If you want to extract lengths (for processing data), then 
-specify the length of interest in extract.in as well as the path to
-SerraLINE's output file (SerraLINE.out)
-Then type: ./Extract < extract.in
-
-This will filter out parameters at yout length of interest and will
-also sort the data (it will be ready to plot!).
-
-___________________________________________________________________
-
-
-
-
-___________________________________________________________________
-                       OUTPUTS
-                       -------
-
-The main process produces the next output:
-
-  - SerraLINE.out.
-    Contains information of the structure analysed and average and 
-    standard deviations of bending angles at different lengths.
-    If the projection method was used, average and standard 
-    deviation of width, height and aspect ratio will be given at
-    the top.
-
-And the extraction process (Extract) produces the following output:
+This will filter out bend angles at yout length of interest and make it ready to plot 
+on the following output:
 
   - subfragment_$l.out .
     Bending angles at length of interest $l (indicated in bp steps)
-    and rearrenged according to the hinge positions.
+    and rearrenged according to the middle positions.
 
 ___________________________________________________________________
 
@@ -245,7 +214,7 @@ and information of the structure analysed (no sequence is provided
 since in SerraLINE.in it is indicated that we won't use the topology
 file).
 
-You can eather modify extract.in and extract bending angles at a
+You can either modify extract.in and extract bending angles at a
 particular length or execute run-example.sh, which will run Extract
 and filter angles of lengths from 1 to 5 bp steps.
 

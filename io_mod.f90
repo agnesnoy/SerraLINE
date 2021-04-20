@@ -1,4 +1,4 @@
-!------------------------------------------------------------- 16/04/2021
+!------------------------------------------------------------- 20/04/2021
 ! This module contains functions and subroutines needed for reading
 ! and writing.
 !
@@ -555,20 +555,23 @@
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
   write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
-  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
-  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
-  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
-  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE:", avg_dist(:)
-  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist(:)
-  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE:", avg_dist_rel(:)
-  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist_rel(:)
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
-  write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
+!  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
+!  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
+!  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "WIDTH (Angstroms): ", avstd_width(:)
+  write(10,F_PARM_6) "HEIGHT (Angstroms): ", avstd_height(:)
+  write(10,F_PARM_6) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE (Angstroms):", avg_dist(:)
+  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE (Angstroms):", max_dist(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE (%):", avg_dist_rel(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE (%):", max_dist_rel(:)
+  write(10,*) ""
   l=0
   do j=1,ndim-1
-    !write(10,trim(F_PARM_3)) j+1, "mer"
-    write(10,trim(F_PARM_3)) j, "bp step"
+    write(10,trim(F_PARM_3)) j+1, "mer"
+    !write(10,trim(F_PARM_3)) j, "bp step"
     write(10,trim(F_PARM_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
 
@@ -624,19 +627,22 @@
   write(10,*) "SEQUENCE"
   write(10,*) "", seq(1:nbp)
   write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
-  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
-  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
-  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
-  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE:", avg_dist(:)
-  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist(:)
-  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE:", avg_dist_rel(:)
-  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE:", max_dist_rel(:)
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
-  write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
+!  write(10,F_PARM_4) "WIDTH: ", avstd_width(:)
+!  write(10,F_PARM_4) "HEIGHT: ", avstd_height(:)
+!  write(10,F_PARM_4) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "WIDTH (Angstroms): ", avstd_width(:)
+  write(10,F_PARM_6) "HEIGHT (Angstroms): ", avstd_height(:)
+  write(10,F_PARM_6) "ASPECT RATIO:", avstd_aratio(:)
+  write(10,F_PARM_6) "AVERAGE OF DISTANCES TO PLANE (Angstroms):", avg_dist(:)
+  write(10,F_PARM_6) "AVERAGE OF MAXIMUM DISTANCES TO PLANE (Angstroms):", max_dist(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF DISTANCES TO PLANE (%):", avg_dist_rel(:)
+  write(10,F_PARM_6) "RELATIVE AVERAGE OF MAXIMUM DISTANCES TO PLANE (%):", max_dist_rel(:)
+  write(10,*) ""
   do l=1,nbp-1
-    !write(10,trim(F_PARM_3)) l+1, "mer"
-    write(10,trim(F_PARM_3)) l, "bp step"
+    write(10,trim(F_PARM_3)) l+1, "mer"
+    !write(10,trim(F_PARM_3)) l, "bp step"
     write(10,trim(F_PARM_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
 
@@ -686,12 +692,12 @@
   write(10,*) "", seq(1:nbp)
   write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
-  write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
+  write(10,*) ""
   l=0
   do j=1,ndim-1
-    !write(10,trim(F_AVB_3)) j+1, "mer"
-    write(10,trim(F_AVB_3)) j, "bp step"
+    write(10,trim(F_AVB_3)) j+1, "mer"
+    !write(10,trim(F_AVB_3)) j, "bp step"
     write(10,trim(F_AVB_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
 
@@ -742,11 +748,11 @@
   write(10,*) "", seq(1:nbp)
   write(10,F_PARM_5) "SNAPSHOTS ANALYSED", frames
   write(10,F_PARM_5) "TANGENT LENGTH:", t_length
-  write(10,*) ""
   write(10,*) "First column averages, second column standard deviations"
+  write(10,*) ""
   do l=1,nbp-1
-    !write(10,trim(F_AVB_3)) l+1, "mer"
-    write(10,trim(F_AVB_3)) l, "bp step"
+    write(10,trim(F_AVB_3)) l+1, "mer"
+    !write(10,trim(F_AVB_3)) l, "bp step"
     write(10,trim(F_AVB_1)) "base-step", "Bending angle"
     write(10,*) "--------------------------------------"
 
@@ -1075,6 +1081,8 @@
   read(10,"(A)") aux !SEQUENCE
   read(10,"(A)") aux !actual sequence
   read(10,"(A)") aux !snaps
+  read(10,F_PARM_5) aux, t_length ! TANGENT LENGTH
+  read(10,"(A)") aux !First column...
   if (planefit) then
     read(10,"(A)") aux ! WIDTH
     read(10,"(A)") aux ! HEIGHT
@@ -1085,11 +1093,7 @@
     read(10,"(A)") aux ! MAX DIST R
   end if
 
-  read(10,F_PARM_5) aux, t_length ! TANGENT LENGTH
-
   read(10,"(A)") aux !""
-
-  read(10,"(A)") aux !First column...
 
   !Let's check if we have a valid my_bp
   if (my_bp < 1) stop "Distance of interest must be positive and greater than 0"
@@ -1154,9 +1158,10 @@
   end do ! l
 
   !Now, read what we actually want
-  read(10,trim(F_FORM_2)) bp, aux !bp
+  read(10,trim(F_FORM_2)) bp, aux !bp step or mer
   !Just to be sure
-  if (bp /= l .or. bp /= my_bp) then
+  !if (bp /= l .or. bp /= my_bp) then !In case of bp step
+  if (bp-1 /= l .or. bp-1 /= my_bp) then !in case of bp+1 mer
     stop "Reading wrong data"
   end if
 

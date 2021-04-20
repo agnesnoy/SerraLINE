@@ -1,4 +1,4 @@
-!                                                              16/04/2021
+!                                                              20/04/2021
 ! This program extracts information from serraline.out for a particular length,
 !
 !    -----------------------------------------------------------------------
@@ -51,9 +51,9 @@
  !Now let's just write the results with no particular format
 
   !Let's first prepare the output file
-  write(out_file,*) my_bp
+  write(out_file,*) my_bp+1
   out_file = adjustl(out_file)
-  out_file = "subfragment_"//trim(out_file)//".out"
+  out_file = "subfragment_"//trim(out_file)//"mer.out"
 
   !Now, write
   open(unit=11, file=trim(out_file), status="replace", action="write", iostat=ierror)

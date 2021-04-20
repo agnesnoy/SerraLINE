@@ -149,11 +149,15 @@ To execute SerraLINE, simply type:
 The SerraLINE produces the next output:
 
   - SerraLINE.out.
-    Contains information of the structure analysed and average and
-    standard deviations of bending angles at different lengths.
-    If the projection method was used, average and standard
-    deviation of width, height, aspect ratio and deviation from
-    planarity will be given at the top.
+    Contains information of bending angles at different lengths.
+    If the projection method is used, width, height, aspect ratio 
+    and deviation from planarity are given at the top.
+    It calculates such quanitities for each frame and outputs average 
+    standard deviation.
+    For deviation from planarity, the program prints the distance 
+    from the plane averaged along the molecule and the point that 
+    is farther apart. It outputs the absolute distance (in angstroms)
+    and the relative distance (in %) with height
 
 ___________________________________________________________________
 

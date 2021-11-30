@@ -1146,7 +1146,7 @@
     if (c_str) then
       j = nbp
     else
-      j = nbp-l
+      j = nbp-l-t_length
     end if
 
     do i=1,j
